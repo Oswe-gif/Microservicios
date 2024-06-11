@@ -1,0 +1,67 @@
+version: "3.9"
+#esto me permite realizar varios comando de docker para crear contenedores o imagenes y no tengo que repetir todos los comandos gracias al docker-compose
+services:
+  mysql:
+    container_name: mysql
+    image: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: sasa
+      MYSQL_DATABASE: msvc_usuarios
+    volumes:
+      - data-mysql:/var/lib/mysql
+    networks:
+      - spring
+  postgres:
+    container_name: postgres
+    image: postgres:16.3-alpine3.20
+    ports:
+      - "5532:5432"
+    environment:
+      POSTGRES_PASSWORD: sasa
+      POSTGRES_DB: msvc_cursos
+    volumes:
+      - data-postgres:/var/lib/postgresql/data
+    networks:
+      - spring
+
+  msvc-usuarios:
+    container_name: msvc-usuarios
+    #image: usuarios
+    build:
+      context: ./
+      dockerfile: ./msvc-usuarios/Dockerfile
+    ports:
+      - "8081:8081"
+    env_file: ./msvc-usuarios/.env
+    networks:
+      - spring
+    depends_on:
+      - mysql
+    restart: always
+
+  msvc-cursos:
+    container_name: msvc-cursos
+    #uso image cuando yo ya he construido una imagen de manera manual
+    #image: cursos
+    build:
+      context: ./
+      dockerfile: ./msvc-cursos/Dockerfile
+    ports:
+      - "8002:8002"
+    env_file: ./msvc-cursos/.env
+    networks:
+      - spring
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  data-mysql:
+    name: data-mysql
+  data-postgres:
+    name: data-postgres
+
+networks:
+  spring:
